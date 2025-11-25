@@ -1,15 +1,20 @@
+# Save this as codemagic.yaml in your project root
 workflows:
-  final-ipa:
-    name: Final IPA Build
+  artifact-check:
+    name: Artifact Check
     environment:
       flutter: stable
-      xcode: latest
     scripts:
-      - name: Build IPA
+      - name: Check Environment
         script: |
-          flutter create --org com.final.app --platforms=ios --overwrite .
-          flutter pub get
-          flutter build ipa --no-codesign
-          echo "✅ IPA FILE CREATED - READY FOR DOWNLOAD!"
+          echo "Current directory:"
+          pwd
+          echo "Creating test artifacts..."
+          mkdir -p output
+          echo "SUCCESS" > output/build_success.txt
+          ls -la > output/file_list.txt
+          echo "If you see this in artifacts, it's working!" > output/readme.txt
+          ls -la output/
     artifacts:
-      - build/ios/ipa/*.ipa
+      - output/**/*
+      - output/*
