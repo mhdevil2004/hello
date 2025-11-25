@@ -1,59 +1,44 @@
+
 workflows:
-  nuclear-fix-ipa:
-    name: Nuclear Fix IPA Build
+  manual-ios-ipa:
+    name: Manual iOS IPA Build
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: default
     scripts:
-      - name: Nuclear Clean Setup
+      - name: Manual iOS Setup
         script: |
-          echo "=== STARTING NUCLEAR FIX ==="
-          pwd
-          ls -la
+          echo "=== Manual iOS Project Creation ==="
           
-          # Remove everything except essential files
-          rm -rf ios android build
-          echo "=== After clean ==="
-          ls -la
-      - name: Create Fresh Project
-        script: |
-          echo "=== Creating fresh Flutter project ==="
-          flutter create \
-            --org com.example.helloapp \
-            --project-name hello_flutter_codemagic \
-            --platforms=ios \
-            --overwrite \
-            .
+          # Completely clean
+          rm -rf ios
           
-          echo "=== Project creation completed ==="
-          echo "=== Checking iOS files ==="
-          ls -la ios/
-          find ios/ -name "*.xcodeproj" | head -5
-      - name: Verify Critical Files
-        script: |
-          echo "=== Verifying critical files exist ==="
-          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
-            echo "✅ SUCCESS: iOS project file exists!"
+          # Create using Flutter template
+          flutter create --template=app --platforms=ios --org com.example.helloapp --overwrite .
+          
+          # Force iOS project generation
+          cd ios
+          pod install || echo "CocoaPods might not be needed"
+          cd ..
+          
+          echo "=== Final verification ==="
+          if [ -d "ios/Runner.xcodeproj" ]; then
+            echo "✅ iOS project verified!"
           else
-            echo "❌ FAILED: iOS project file missing!"
-            echo "Creating manual structure..."
-            # Emergency fallback
+            echo "❌ iOS project missing - attempting recovery..."
             flutter create --platforms=ios .
           fi
-      - name: Get Dependencies
+      - name: Build and Test
         script: |
           flutter pub get
-      - name: Build IPA
-        script: |
           echo "=== Building IPA ==="
-          flutter build ipa --no-codesign --verbose
+          flutter build ipa --no-codesign 2>&1 | tee build_log.txt
           
-          echo "=== Checking for IPA ==="
-          find . -name "*.ipa" -type f 2>/dev/null | head -10
-          ls -la build/ios/ipa/ 2>/dev/null || echo "Trying to find any build artifacts..."
-          find build/ -name "*.ipa" -o -name "*.app" 2>/dev/null
+          echo "=== Build log summary ==="
+          tail -20 build_log.txt
+          
+          echo "=== Artifact search ==="
+          find . -name "*.ipa" -type f
     artifacts:
       - build/ios/ipa/*.ipa
-      - build/ios/**/*.app
-      - flutter_drive.log
+      - build_log.txt
