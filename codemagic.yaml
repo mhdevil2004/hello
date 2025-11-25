@@ -1,35 +1,37 @@
 workflows:
-  emergency-ipa:
-    name: Emergency IPA Build
+  guaranteed-ipa:
+    name: Guaranteed IPA Build
     environment:
       flutter: stable
       xcode: latest
     scripts:
-      - name: Complete Fresh Start
+      - name: Force Create iOS Project
         script: |
-          echo "=== EMERGENCY MODE ==="
+          echo "=== STEP 1: Force creating iOS project ==="
+          flutter create --org com.yourcompany.hello --platforms=ios --overwrite .
           
-          # Save your source code
-          mkdir -p /tmp/source_backup
-          cp -r lib pubspec.yaml codemagic.yaml /tmp/source_backup/
+          echo "=== STEP 2: Verify iOS project ==="
+          if [ -d "ios/Runner.xcodeproj" ]; then
+            echo "✅ iOS PROJECT CREATED SUCCESSFULLY!"
+          else
+            echo "❌ iOS project missing - using emergency method"
+            # Emergency fallback
+            mkdir -p ios
+            flutter create --platforms=ios --overwrite .
+          fi
           
-          # Complete clean slate
-          rm -rf *
-          
-          # Restore source code
-          cp -r /tmp/source_backup/* .
-          
-          # Create fresh project
-          flutter create --org com.example.emergency --platforms=ios --overwrite .
-          
-          echo "=== Emergency verification ==="
-          ls -la ios/Runner.xcodeproj/ && echo "SUCCESS" || echo "FAILED"
+          echo "=== STEP 3: Final verification ==="
+          find . -name "*.xcodeproj" | head -5
       - name: Build IPA
         script: |
+          echo "=== STEP 4: Building IPA ==="
+          flutter clean
           flutter pub get
-          flutter build ipa --no-codesign
-          echo "IPA build attempt completed"
-          ls -la build/ios/ipa/ 2>/dev/null || find build/ -name "*.ipa" 2>/dev/null
+          flutter build ipa --no-codesign --verbose
+          
+          echo "=== STEP 5: Checking for IPA ==="
+          find . -name "*.ipa" -type f
+          ls -la build/ios/ipa/ || echo "Listing build directory..."
     artifacts:
       - build/ios/ipa/*.ipa
-      - build/ios/**/*
+      - flutter_drive.log
