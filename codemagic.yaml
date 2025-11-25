@@ -1,29 +1,35 @@
 workflows:
-  download-ipa:
-    name: Download IPA Build
+  bulletproof-ipa:
+    name: Bulletproof IPA Download
     environment:
       flutter: stable
-      xcode: latest
+      xcode: 15.0
     scripts:
-      - name: Create iOS Project
+      - name: Step 1 - Fresh Start
         script: |
-          echo "=== STEP 1: Creating iOS Project ==="
-          flutter create --org com.download.app --platforms=ios --overwrite .
-          echo "✅ iOS project created"
-      - name: Get Dependencies
+          echo "🚀 STARTING BULLETPROOF BUILD..."
+          pwd
+          ls -la
+      - name: Step 2 - Create Project
         script: |
-          echo "=== STEP 2: Getting Dependencies ==="
+          echo "📱 CREATING iOS PROJECT..."
+          flutter create --org com.download.now --platforms=ios --overwrite .
+          echo "✅ Project created!"
+          ls -la ios/
+      - name: Step 3 - Get Deps
+        script: |
+          echo "📦 GETTING DEPENDENCIES..."
           flutter pub get
-          echo "✅ Dependencies loaded"
-      - name: Build IPA
+          echo "✅ Dependencies done!"
+      - name: Step 4 - Build IPA
         script: |
-          echo "=== STEP 3: Building IPA ==="
+          echo "🏗️ BUILDING IPA FILE..."
           flutter build ipa --no-codesign
-          echo "✅ IPA build completed"
-      - name: Verify IPA
+          echo "✅ Build completed!"
+      - name: Step 5 - Verify IPA
         script: |
-          echo "=== STEP 4: Verifying IPA File ==="
+          echo "🔍 CHECKING FOR IPA..."
           ls -la build/ios/ipa/
-          echo "📱 IPA FILE READY FOR DOWNLOAD!"
+          echo "🎉 IPA READY FOR DOWNLOAD!"
     artifacts:
       - build/ios/ipa/*.ipa
