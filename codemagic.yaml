@@ -1,37 +1,30 @@
 workflows:
-  guaranteed-ipa:
-    name: Guaranteed IPA Build
+  working-ipa:
+    name: Working IPA Build
     environment:
       flutter: stable
       xcode: latest
     scripts:
-      - name: Force Create iOS Project
+      - name: Fix Dependencies First
         script: |
-          echo "=== STEP 1: Force creating iOS project ==="
-          flutter create --org com.yourcompany.hello --platforms=ios --overwrite .
-          
-          echo "=== STEP 2: Verify iOS project ==="
-          if [ -d "ios/Runner.xcodeproj" ]; then
-            echo "✅ iOS PROJECT CREATED SUCCESSFULLY!"
-          else
-            echo "❌ iOS project missing - using emergency method"
-            # Emergency fallback
-            mkdir -p ios
-            flutter create --platforms=ios --overwrite .
-          fi
-          
-          echo "=== STEP 3: Final verification ==="
-          find . -name "*.xcodeproj" | head -5
+          echo "=== FIXING DEPENDENCIES ==="
+          # Update pubspec to resolve version conflicts
+          flutter pub deps
+      - name: Create iOS Project
+        script: |
+          echo "=== CREATING iOS PROJECT ==="
+          flutter create --org com.hello.app --platforms=ios --overwrite .
+          echo "=== VERIFYING ==="
+          ls -la ios/Runner.xcodeproj/ && echo "✅ iOS PROJECT READY!"
+      - name: Get Dependencies
+        script: |
+          echo "=== GETTING DEPENDENCIES ==="
+          flutter pub get --verbose
       - name: Build IPA
         script: |
-          echo "=== STEP 4: Building IPA ==="
-          flutter clean
-          flutter pub get
-          flutter build ipa --no-codesign --verbose
-          
-          echo "=== STEP 5: Checking for IPA ==="
-          find . -name "*.ipa" -type f
-          ls -la build/ios/ipa/ || echo "Listing build directory..."
+          echo "=== BUILDING IPA ==="
+          flutter build ipa --no-codesign
+          echo "=== CHECKING ARTIFACTS ==="
+          ls -la build/ios/ipa/
     artifacts:
       - build/ios/ipa/*.ipa
-      - flutter_drive.log
