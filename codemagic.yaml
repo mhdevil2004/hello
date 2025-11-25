@@ -1,41 +1,59 @@
 workflows:
-  debug-ipa-build:
-    name: Debug IPA Build
+  nuclear-fix-ipa:
+    name: Nuclear Fix IPA Build
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Show environment info
+      - name: Nuclear Clean Setup
         script: |
-          echo "=== Flutter Version ==="
-          flutter --version
-          echo "=== Directory Structure ==="
+          echo "=== STARTING NUCLEAR FIX ==="
+          pwd
           ls -la
-          echo "=== Xcode Version ==="
-          xcodebuild -version
-      - name: Create iOS project
+          
+          # Remove everything except essential files
+          rm -rf ios android build
+          echo "=== After clean ==="
+          ls -la
+      - name: Create Fresh Project
         script: |
-          echo "=== Creating iOS Project ==="
-          flutter create --org com.example.helloapp --platforms=ios --overwrite .
-          echo "=== iOS Project Created ==="
+          echo "=== Creating fresh Flutter project ==="
+          flutter create \
+            --org com.example.helloapp \
+            --project-name hello_flutter_codemagic \
+            --platforms=ios \
+            --overwrite \
+            .
+          
+          echo "=== Project creation completed ==="
+          echo "=== Checking iOS files ==="
           ls -la ios/
-      - name: Get dependencies
+          find ios/ -name "*.xcodeproj" | head -5
+      - name: Verify Critical Files
         script: |
-          echo "=== Getting Dependencies ==="
+          echo "=== Verifying critical files exist ==="
+          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
+            echo "✅ SUCCESS: iOS project file exists!"
+          else
+            echo "❌ FAILED: iOS project file missing!"
+            echo "Creating manual structure..."
+            # Emergency fallback
+            flutter create --platforms=ios .
+          fi
+      - name: Get Dependencies
+        script: |
           flutter pub get
-      - name: Build IPA with verbose output
+      - name: Build IPA
         script: |
           echo "=== Building IPA ==="
           flutter build ipa --no-codesign --verbose
-          echo "=== Build Complete ==="
-          echo "=== Checking for IPA file ==="
-          find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA file found"
-          ls -la build/ios/ipa/ 2>/dev/null || echo "IPA directory not found"
-      - name: List all build artifacts
-        script: |
-          echo "=== All Build Artifacts ==="
-          find build/ -type f -name "*.ipa" -o -name "*.app" -o -name "*.zip" 2>/dev/null
+          
+          echo "=== Checking for IPA ==="
+          find . -name "*.ipa" -type f 2>/dev/null | head -10
+          ls -la build/ios/ipa/ 2>/dev/null || echo "Trying to find any build artifacts..."
+          find build/ -name "*.ipa" -o -name "*.app" 2>/dev/null
     artifacts:
       - build/ios/ipa/*.ipa
+      - build/ios/**/*.app
       - flutter_drive.log
