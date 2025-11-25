@@ -1,16 +1,41 @@
 workflows:
-  simple-ipa:
-    name: Simple IPA Build
+  debug-ipa-build:
+    name: Debug IPA Build
     environment:
       flutter: stable
       xcode: latest
+      cocoapods: default
     scripts:
-      - name: Create project
+      - name: Show environment info
         script: |
+          echo "=== Flutter Version ==="
+          flutter --version
+          echo "=== Directory Structure ==="
+          ls -la
+          echo "=== Xcode Version ==="
+          xcodebuild -version
+      - name: Create iOS project
+        script: |
+          echo "=== Creating iOS Project ==="
           flutter create --org com.example.helloapp --platforms=ios --overwrite .
-      - name: Build IPA
+          echo "=== iOS Project Created ==="
+          ls -la ios/
+      - name: Get dependencies
         script: |
+          echo "=== Getting Dependencies ==="
           flutter pub get
-          flutter build ipa --no-codesign
+      - name: Build IPA with verbose output
+        script: |
+          echo "=== Building IPA ==="
+          flutter build ipa --no-codesign --verbose
+          echo "=== Build Complete ==="
+          echo "=== Checking for IPA file ==="
+          find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA file found"
+          ls -la build/ios/ipa/ 2>/dev/null || echo "IPA directory not found"
+      - name: List all build artifacts
+        script: |
+          echo "=== All Build Artifacts ==="
+          find build/ -type f -name "*.ipa" -o -name "*.app" -o -name "*.zip" 2>/dev/null
     artifacts:
       - build/ios/ipa/*.ipa
+      - flutter_drive.log
