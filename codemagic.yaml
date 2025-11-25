@@ -5,7 +5,7 @@ workflows:
       flutter: stable
       xcode: latest
       vars:
-        FLUTTER_BUILD_MODE: release
+        FLUTTER_BUILD_MODE: debug
     scripts:
       - name: Ensure project created
         script: |
@@ -17,6 +17,6 @@ workflows:
           flutter pub get
       - name: Build iOS (simulator)
         script: |
-          flutter build ios --simulator --no-codesign
+          flutter build ios --simulator --no-codesign --debug
     artifacts:
       - build/ios/iphonesimulator/**/*.app
