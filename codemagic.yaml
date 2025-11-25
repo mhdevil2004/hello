@@ -1,22 +1,31 @@
 workflows:
-  ios-simulator:
+  ios-simulator-fixed:
     name: iOS Simulator Build
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Ensure iOS project exists
+      - name: Force recreate iOS project
         script: |
-          if [ ! -f ios/Runner.xcodeproj/project.pbxproj ]; then
-            echo "Generating iOS project..."
-            flutter create --org com.yourdomain . --platforms=ios
-          fi
+          echo "Current directory:"
+          pwd
+          echo "Directory contents:"
+          ls -la
+          
+          # Remove existing iOS directory completely
+          rm -rf ios
+          
+          # Recreate iOS project with proper parameters
+          flutter create --org com.example.helloapp . --platforms=ios
+          
+          echo "After flutter create - iOS directory:"
+          ls -la ios/
       - name: Get dependencies
         script: |
           flutter pub get
-      - name: Build iOS simulator
+      - name: Build iOS (simulator)
         script: |
-          flutter build ios --simulator --debug
+          flutter build ios --simulator --debug --verbose
     artifacts:
       - build/ios/iphonesimulator/**/*.app
