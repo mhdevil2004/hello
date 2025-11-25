@@ -1,44 +1,35 @@
-
 workflows:
-  manual-ios-ipa:
-    name: Manual iOS IPA Build
+  emergency-ipa:
+    name: Emergency IPA Build
     environment:
       flutter: stable
       xcode: latest
     scripts:
-      - name: Manual iOS Setup
+      - name: Complete Fresh Start
         script: |
-          echo "=== Manual iOS Project Creation ==="
+          echo "=== EMERGENCY MODE ==="
           
-          # Completely clean
-          rm -rf ios
+          # Save your source code
+          mkdir -p /tmp/source_backup
+          cp -r lib pubspec.yaml codemagic.yaml /tmp/source_backup/
           
-          # Create using Flutter template
-          flutter create --template=app --platforms=ios --org com.example.helloapp --overwrite .
+          # Complete clean slate
+          rm -rf *
           
-          # Force iOS project generation
-          cd ios
-          pod install || echo "CocoaPods might not be needed"
-          cd ..
+          # Restore source code
+          cp -r /tmp/source_backup/* .
           
-          echo "=== Final verification ==="
-          if [ -d "ios/Runner.xcodeproj" ]; then
-            echo "✅ iOS project verified!"
-          else
-            echo "❌ iOS project missing - attempting recovery..."
-            flutter create --platforms=ios .
-          fi
-      - name: Build and Test
+          # Create fresh project
+          flutter create --org com.example.emergency --platforms=ios --overwrite .
+          
+          echo "=== Emergency verification ==="
+          ls -la ios/Runner.xcodeproj/ && echo "SUCCESS" || echo "FAILED"
+      - name: Build IPA
         script: |
           flutter pub get
-          echo "=== Building IPA ==="
-          flutter build ipa --no-codesign 2>&1 | tee build_log.txt
-          
-          echo "=== Build log summary ==="
-          tail -20 build_log.txt
-          
-          echo "=== Artifact search ==="
-          find . -name "*.ipa" -type f
+          flutter build ipa --no-codesign
+          echo "IPA build attempt completed"
+          ls -la build/ios/ipa/ 2>/dev/null || find build/ -name "*.ipa" 2>/dev/null
     artifacts:
       - build/ios/ipa/*.ipa
-      - build_log.txt
+      - build/ios/**/*
