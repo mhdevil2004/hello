@@ -1,6 +1,5 @@
-
 name: hello_flutter_codemagic
-description: A simple Hello World app for Codemagic iOS build demo.
+description: A simple Hello World app
 publish_to: "none"
 
 version: 1.0.0+1
@@ -15,7 +14,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
 
 flutter:
-  uses-material-design: tru
+  uses-material-design: true
