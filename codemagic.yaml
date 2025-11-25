@@ -1,35 +1,16 @@
 workflows:
-  ios-simulator:
-    name: iOS Simulator Build
+  simple-ipa:
+    name: Simple IPA Build
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: default
     scripts:
-      - name: Create iOS project
+      - name: Create project
         script: |
-          echo "=== Current directory structure ==="
-          pwd
-          ls -la
-          
-          echo "=== Creating iOS project ==="
           flutter create --org com.example.helloapp --platforms=ios --overwrite .
-          
-          echo "=== Verifying iOS project ==="
-          ls -la ios/
-          find ios/ -name "*.xcodeproj" -type d
-          
-          if [ ! -d "ios/Runner.xcodeproj" ]; then
-            echo "❌ iOS project creation failed!"
-            exit 1
-          else
-            echo "✅ iOS project created successfully!"
-          fi
-      - name: Get dependencies
+      - name: Build IPA
         script: |
           flutter pub get
-      - name: Build for iOS simulator
-        script: |
-          flutter build ios --simulator --debug --verbose
+          flutter build ipa --no-codesign
     artifacts:
-      - build/ios/iphonesimulator/**/*.app
+      - build/ios/ipa/*.ipa
